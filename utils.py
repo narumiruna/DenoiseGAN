@@ -1,23 +1,17 @@
 import os
 
 import numpy as np
-import skimage
-import torchvision.transforms.functional as F
+import torch
+from numpy.random import poisson
 from PIL import Image
 from torch.utils import data
-from torchvision import transforms
+from torchvision import datasets, transforms
+from torchvision.datasets.folder import default_loader
 
 IMG_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm']
 
-
 def is_image_file(filename):
     return any(filename.lower().endswith(ext) for ext in IMG_EXTENSIONS)
-
-
-def add_poisson_noise(image):
-    noisy = skimage.util.noise.random_noise(np.array(image), mode='poisson')
-    return Image.fromarray(np.uint8(noisy * 255))
-
 
 def psnr(x, y):
     """
@@ -30,46 +24,64 @@ def psnr(x, y):
     # print('psnr: {}, mse: {}, max_x: {}'.format(psnr, mse, max_x))
     return psnr
 
-class ImageFolder(data.Dataset):
-    def __init__(self, root, size=128):
-        super(ImageFolder, self).__init__()
+def var_to_numpy(var):
+    return var.cpu().data.numpy()
+
+def poisson_noise(image, peak=30):
+    image = np.array(image)
+    ratio = peak / 255.0
+    output = poisson(image * ratio) / ratio
+    output = np.clip(output, 0, 255).astype(np.uint8)
+    output = Image.fromarray(output)
+    return output
+
+
+class NoiseDataset(data.Dataset):
+    def __init__(self, root, transform=None, size=10):
+        super(NoiseDataset, self).__init__()
         self.root = root
-        self.size = size
-        self.classes = [d for d in os.listdir(
+        self.transform = transform
+        self.random_crop = transforms.RandomCrop(size)
+
+        self.image_dirs = [d for d in os.listdir(
             root) if os.path.isdir(os.path.join(root, d))]
 
-        self.real_images = []
-        for class_ in self.classes:
-            for dir_path, _, filenames in os.walk(os.path.join(root, class_)):
-                for filename in filenames:
-                    if is_image_file(filename):
-                        self.real_images.append(
-                            os.path.join(dir_path, filename))
+        self.image_paths = []
+        for image_dir in self.image_dirs:
+            image_filenames = os.listdir(os.path.join(root, image_dir))
+            for image_filename in image_filenames:
+                if image_filename.endswith('.jpg'):
+                    self.image_paths.append(os.path.join(self.root, image_dir, image_filename))
 
     def __getitem__(self, index):
-        # get crop function
-        random_crop = transforms.RandomCrop(self.size)
+        # load image
+        image = datasets.folder.default_loader(self.image_paths[index])
 
-        # get real image
-        real_image = Image.open(self.real_images[index])
+        # crop image
+        image = self.random_crop(image)
 
-        # randomly crop real image
-        real_image = random_crop(real_image)
+        # add poisson noise
+        noisy = poisson_noise(image)
 
-        # to grayscale
-        real_image = F.to_grayscale(real_image)
+        if self.transform:
+            image = self.transform(image)
+            noisy = self.transform(noisy)
 
-        # get noisy image
-        noisy_image = add_poisson_noise(real_image)
-
-        # to tensor image
-        noisy_image = F.to_tensor(noisy_image)
-        real_image = F.to_tensor(real_image)
-
-        # normalize
-        noisy_image = F.normalize(noisy_image, (0.5,), (0.5,))
-        real_image = F.normalize(real_image, (0.5,), (0.5,))
-        return noisy_image, real_image
+        return image, noisy
 
     def __len__(self):
-        return len(self.real_images)
+        return len(self.image_paths)
+
+
+def main():
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        # transforms.Normalize((0.5, 0.5, 0.5), (0.5,0.5,0.5))
+    ])
+    dataset = NoiseDataset('data', transform=transform)
+    dataloader = data.DataLoader(dataset, batch_size=64)
+
+    for i,(x,y) in enumerate(dataloader):
+        print(x.numpy().mean(), x.numpy().std(), x.numpy().max(), x.numpy().min())
+if __name__ == '__main__':
+    main()
