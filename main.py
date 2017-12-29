@@ -13,6 +13,7 @@ def main():
     parser.add_argument('--cuda', action='store_true')
     parser.add_argument('--model_dir', type=str, default='models')
     parser.add_argument('--parallel', action='store_true')
+    parser.add_argument('--num_workers', type=int, default=2)
     args = parser.parse_args()
 
     args.cuda = args.cuda and torch.cuda.is_available()

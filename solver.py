@@ -72,6 +72,6 @@ class Solver(object):
         dataloader = data.DataLoader(dataset,
                                      batch_size=self.args.batch_size,
                                      shuffle=True,
-                                     num_workers=2)
+                                     num_workers=self.args.num_workers)
 
         return dataloader
