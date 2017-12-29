@@ -19,6 +19,8 @@ def main():
     args.cuda = args.cuda and torch.cuda.is_available()
     os.makedirs(args.model_dir, exist_ok=True)
 
+    print(args)
+
     solver = Solver(args)
     solver.solve()
 
