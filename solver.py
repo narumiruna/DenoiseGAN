@@ -47,7 +47,7 @@ class Solver(object):
                 image = image.cuda()
                 noisy = noisy.cuda()
 
-            loss = (self.net(image) - image).pow(2).mean()
+            loss = (self.net(noisy) - image).pow(2).mean()
             loss.backward()
             self.optimizer.step()
             self.optimizer.zero_grad()
