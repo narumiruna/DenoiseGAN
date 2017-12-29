@@ -1,6 +1,7 @@
 import os
 
 import torch
+from torch import nn
 from torch.autograd import Variable
 from torch.utils import data
 from torchvision import transforms
