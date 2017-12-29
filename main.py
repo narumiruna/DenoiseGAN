@@ -1,7 +1,7 @@
 import argparse
 import torch
 from solver import Solver
-
+import os
 
 def main():
     parser = argparse.ArgumentParser()
@@ -11,9 +11,12 @@ def main():
     parser.add_argument('--n_layers', type=int, default=20)
     parser.add_argument('--n_channels', type=int, default=64)
     parser.add_argument('--cuda', action='store_true')
+    parser.add_argument('--model_dir', type=str, default='models')
     args = parser.parse_args()
 
     args.cuda = args.cuda and torch.cuda.is_available()
+    os.makedirs(args.model_dir, exist_ok=True)
+
     solver = Solver(args)
     solver.solve()
 

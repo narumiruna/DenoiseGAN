@@ -1,4 +1,4 @@
-
+import os
 
 import torch
 from torch.autograd import Variable
@@ -19,9 +19,17 @@ class Solver(object):
 
         self.optimizer = torch.optim.Adam(self.net.parameters(), args.learning_rate)
 
+        self.best_loss = float('Inf')
+
     def solve(self):
         for epoch in range(self.args.epochs):
             self.train(epoch)
+
+
+    def save_model(self, epoch, index):
+        filename = os.path.join(self.args.model_dir, 'model_{}_{}.pth'.format(epoch, index))
+        print('Saving model {}'.format(filename))
+        torch.save(self.net.state_dict(), filename)
 
     def train(self, epoch):
         for i, (image, noisy) in enumerate(self.dataloader):
@@ -37,10 +45,14 @@ class Solver(object):
             self.optimizer.step()
             self.optimizer.zero_grad()
 
-            if i % 1000 == 0:
+            if i % 100 == 0:
                 print('Train epoch: {}, loss: {}, psnr: {}.'.format(epoch,
                                                                     float(var_to_numpy(loss)),
                                                                     avg_psnr(var_to_numpy(image), var_to_numpy(noisy))))
+                cur_loss = float(var_to_numpy(loss))
+                if cur_loss < self.best_loss:
+                    self.best_loss = cur_loss
+                    self.save_model(epoch, i)
 
     def evaluate(self):
         pass
