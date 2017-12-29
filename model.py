@@ -9,7 +9,7 @@ from torch import nn
 
 
 class DeepClassAwareDenoiseNet(nn.Module):
-    def __init__(self, in_ch=3, c_ch=64, n_layers=20):
+    def __init__(self, in_ch, c_ch, n_layers):
         super(DeepClassAwareDenoiseNet, self).__init__()
         self.in_ch = in_ch
         self.c_ch = c_ch

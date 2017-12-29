@@ -13,6 +13,12 @@ IMG_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm']
 def is_image_file(filename):
     return any(filename.lower().endswith(ext) for ext in IMG_EXTENSIONS)
 
+def avg_psnr(x, y):
+    s = 0
+    for xx, yy in zip(x, y):
+        s+=psnr(xx, yy)
+    return s / len(xx)
+
 def psnr(x, y):
     """
     x: ground turth
