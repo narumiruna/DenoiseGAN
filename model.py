@@ -26,8 +26,9 @@ class DeepClassAwareDenoiseNet(nn.Module):
         for i, layer in enumerate(self.module_list):
             main = layer(main)
             output = output + main[:, :self.in_ch]
-            main = F.leaky_relu(main[:, self.in_ch:],
-                                negative_slope=0.2)
+            main = main[:, self.in_ch:]
+            if i < len(self.module_list) - 1:
+                main = F.leaky_relu(main, negative_slope=0.2)
 
         return output
 
