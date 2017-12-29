@@ -10,28 +10,35 @@ from torchvision.datasets.folder import default_loader
 
 IMG_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm']
 
+
 def is_image_file(filename):
     return any(filename.lower().endswith(ext) for ext in IMG_EXTENSIONS)
 
+
 def avg_psnr(x, y):
+    batch_size, _, _, _ = x.shape
     s = 0
     for xx, yy in zip(x, y):
-        s+=psnr(xx, yy)
-    return s / len(xx)
+        s += psnr(xx, yy)
+    return s / batch_size
+
 
 def psnr(x, y):
+    # TD-DO: fix psnr bug
     """
     x: ground turth
     y: noisy image
     """
     mse = np.array((x - y)**2).mean()
-    max_x = np.max(x)
+    max_x = 1.0
     psnr = 10 * np.log10(max_x**2 / mse)
     # print('psnr: {}, mse: {}, max_x: {}'.format(psnr, mse, max_x))
     return psnr
 
+
 def var_to_numpy(var):
     return var.cpu().data.numpy()
+
 
 def poisson_noise(image, peak=30):
     image = np.array(image)
@@ -57,7 +64,8 @@ class NoiseDataset(data.Dataset):
             image_filenames = os.listdir(os.path.join(root, image_dir))
             for image_filename in image_filenames:
                 if image_filename.endswith('.jpg'):
-                    self.image_paths.append(os.path.join(self.root, image_dir, image_filename))
+                    self.image_paths.append(os.path.join(
+                        self.root, image_dir, image_filename))
 
     def __getitem__(self, index):
         # load image
@@ -87,7 +95,10 @@ def main():
     dataset = NoiseDataset('data', transform=transform)
     dataloader = data.DataLoader(dataset, batch_size=64)
 
-    for i,(x,y) in enumerate(dataloader):
-        print(x.numpy().mean(), x.numpy().std(), x.numpy().max(), x.numpy().min())
+    for i, (x, y) in enumerate(dataloader):
+        print(x.numpy().mean(), x.numpy().std(),
+              x.numpy().max(), x.numpy().min())
+
+
 if __name__ == '__main__':
     main()

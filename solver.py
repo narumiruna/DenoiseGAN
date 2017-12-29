@@ -8,8 +8,6 @@ from torchvision import transforms
 
 from model import DeepClassAwareDenoiseNet
 from utils import NoiseDataset, var_to_numpy, avg_psnr
-
-
 class Solver(object):
     def __init__(self, args):
         self.args = args
@@ -24,7 +22,8 @@ class Solver(object):
             print('Enable cuda.')
             self.net.cuda()
 
-        self.optimizer = torch.optim.Adam(self.net.parameters(), args.learning_rate)
+        self.optimizer = torch.optim.Adam(
+            self.net.parameters(), args.learning_rate)
 
         self.best_loss = float('Inf')
 
@@ -32,9 +31,9 @@ class Solver(object):
         for epoch in range(self.args.epochs):
             self.train(epoch)
 
-
     def save_model(self, epoch, index):
-        filename = os.path.join(self.args.model_dir, 'model_{}_{}.pth'.format(epoch, index))
+        filename = os.path.join(self.args.model_dir,
+                                'model_{}_{}.pth'.format(epoch, index))
         print('Saving model {}'.format(filename))
         torch.save(self.net.state_dict(), filename)
 
@@ -43,23 +42,28 @@ class Solver(object):
             image = Variable(image)
             noisy = Variable(noisy)
 
+            print(avg_psnr(var_to_numpy(image), var_to_numpy(noisy)))
+
             if self.args.cuda:
                 image = image.cuda()
                 noisy = noisy.cuda()
 
-            loss = (self.net(noisy) - image).pow(2).mean()
+            denoised = self.net(noisy)
+            loss = (denoised - image).pow(2).mean()
             loss.backward()
             self.optimizer.step()
             self.optimizer.zero_grad()
 
             if i % 100 == 0:
-                print('Train epoch: {}, loss: {}, psnr: {}.'.format(epoch,
-                                                                    float(var_to_numpy(loss)),
-                                                                    avg_psnr(var_to_numpy(image), var_to_numpy(noisy))))
+                print('Train epoch: {}, loss: {}.'.format(epoch, float(var_to_numpy(loss))))
+
                 cur_loss = float(var_to_numpy(loss))
                 if cur_loss < self.best_loss:
                     self.best_loss = cur_loss
                     self.save_model(epoch, i)
+
+    def save_samples(self, image, noisy):
+        pass
 
     def evaluate(self):
         pass
