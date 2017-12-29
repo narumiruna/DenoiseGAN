@@ -14,7 +14,13 @@ class Solver(object):
         self.args = args
         self.dataloader = self.get_dataloader()
         self.net = DeepClassAwareDenoiseNet(3, args.n_channels, args.n_layers)
+
+        if args.parallel:
+            print('Enable data parallel.')
+            self.net = nn.DataParallel(self.net)
+
         if args.cuda:
+            print('Enable cuda.')
             self.net.cuda()
 
         self.optimizer = torch.optim.Adam(self.net.parameters(), args.learning_rate)

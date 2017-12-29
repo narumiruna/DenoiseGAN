@@ -12,6 +12,7 @@ def main():
     parser.add_argument('--n_channels', type=int, default=64)
     parser.add_argument('--cuda', action='store_true')
     parser.add_argument('--model_dir', type=str, default='models')
+    parser.add_argument('--parallel', action='store_true')
     args = parser.parse_args()
 
     args.cuda = args.cuda and torch.cuda.is_available()
