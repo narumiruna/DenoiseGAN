@@ -12,12 +12,14 @@ def main():
     parser.add_argument('--n_channels', type=int, default=64)
     parser.add_argument('--cuda', action='store_true')
     parser.add_argument('--model_dir', type=str, default='models')
+    parser.add_argument('--image_dir', type=str, default='images')
     parser.add_argument('--parallel', action='store_true')
     parser.add_argument('--num_workers', type=int, default=2)
     args = parser.parse_args()
 
     args.cuda = args.cuda and torch.cuda.is_available()
     os.makedirs(args.model_dir, exist_ok=True)
+    os.makedirs(args.image_dir, exist_ok=True)
 
     print(args)
 

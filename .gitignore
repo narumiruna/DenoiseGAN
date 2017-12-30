@@ -100,7 +100,8 @@ ENV/
 # mypy
 .mypy_cache/
 
-models/
 data/
+images/
+models/
 .vscode/
 .DS_Store

@@ -5,9 +5,12 @@ from torch import nn
 from torch.autograd import Variable
 from torch.utils import data
 from torchvision import transforms
+from torchvision.utils import make_grid, save_image
 
 from model import DeepClassAwareDenoiseNet
-from utils import NoiseDataset, var_to_numpy, avg_psnr
+from utils import NoiseDataset, var_to_numpy, psnr
+
+
 class Solver(object):
     def __init__(self, args):
         self.args = args
@@ -22,8 +25,8 @@ class Solver(object):
             print('Enable cuda.')
             self.net.cuda()
 
-        self.optimizer = torch.optim.Adam(
-            self.net.parameters(), args.learning_rate)
+        self.optimizer = torch.optim.Adam(self.net.parameters(),
+                                          args.learning_rate)
 
         self.best_loss = float('Inf')
 
@@ -42,8 +45,6 @@ class Solver(object):
             image = Variable(image)
             noisy = Variable(noisy)
 
-            print(avg_psnr(var_to_numpy(image), var_to_numpy(noisy)))
-
             if self.args.cuda:
                 image = image.cuda()
                 noisy = noisy.cuda()
@@ -55,15 +56,19 @@ class Solver(object):
             self.optimizer.zero_grad()
 
             if i % 100 == 0:
-                print('Train epoch: {}, loss: {}.'.format(epoch, float(var_to_numpy(loss))))
+                print('Train epoch: {}, loss: {}.'.format(
+                    epoch, float(var_to_numpy(loss))))
+
+                print('Saving images...')
+                save_image(torch.cat([image.data, noisy.data, denoised.data]),
+                           'images/{}_{}.jpg'.format(epoch, i),
+                           nrow=self.args.batch_size)
+                print(psnr(image.data, noisy.data), psnr(image.data, denoised.data))
 
                 cur_loss = float(var_to_numpy(loss))
                 if cur_loss < self.best_loss:
                     self.best_loss = cur_loss
                     self.save_model(epoch, i)
-
-    def save_samples(self, image, noisy):
-        pass
 
     def evaluate(self):
         pass
