@@ -9,6 +9,7 @@ from torchvision.utils import make_grid, save_image
 
 from model import DeepClassAwareDenoiseNet
 from utils import NoiseDataset, var_to_numpy, psnr
+from dataset import NoisyCoco
 
 
 class Solver(object):
@@ -41,31 +42,33 @@ class Solver(object):
         torch.save(self.net.state_dict(), filename)
 
     def train(self, epoch):
-        for i, (image, noisy) in enumerate(self.dataloader):
-            image = Variable(image)
+        for i, (noisy, image) in enumerate(self.dataloader):
             noisy = Variable(noisy)
+            image = Variable(image)
 
             if self.args.cuda:
-                image = image.cuda()
                 noisy = noisy.cuda()
+                image = image.cuda()
 
             denoised = self.net(noisy)
             loss = (denoised - image).pow(2).mean()
+
+            self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-            self.optimizer.zero_grad()
 
-            if i % 100 == 0:
-                print('Train epoch: {}, loss: {}.'.format(
-                    epoch, float(var_to_numpy(loss))))
+            if i % args.log_interval == 0:
+                print('Train epoch: {}, loss: {}.'.format(epoch,
+                                                          float(loss.data)))
 
                 print('Saving images...')
                 save_image(torch.cat([image.data, noisy.data, denoised.data]),
                            'images/{}_{}.jpg'.format(epoch, i),
                            nrow=self.args.batch_size)
-                print(psnr(image.data, noisy.data), psnr(image.data, denoised.data))
+                print(psnr(image.data, noisy.data),
+                      psnr(image.data, denoised.data))
 
-                cur_loss = float(var_to_numpy(loss))
+                cur_loss = float(loss.data)
                 if cur_loss < self.best_loss:
                     self.best_loss = cur_loss
                     self.save_model(epoch, i)
@@ -77,8 +80,9 @@ class Solver(object):
         transform = transforms.Compose([
             transforms.ToTensor()
         ])
-        dataset = NoiseDataset('data', transform=transform)
-        dataloader = data.DataLoader(dataset,
+
+        dataloader = data.DataLoader(NoisyCoco('data',
+                                               transform=transform),
                                      batch_size=self.args.batch_size,
                                      shuffle=True,
                                      num_workers=self.args.num_workers)
