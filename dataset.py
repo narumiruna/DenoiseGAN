@@ -20,6 +20,11 @@ def poisson_noise(image, peak=30):
     image = np.array(image)
     ratio = peak / 255.0
     output = poisson(image * ratio) / ratio
+
+    # convex combination
+    t = np.random.rand()
+    output = t * image + (1 - t) * output
+
     output = np.clip(output, 0, 255).astype(np.uint8)
     output = Image.fromarray(output)
     return output
@@ -29,6 +34,7 @@ class NoisyCoco(data.Dataset):
     def __init__(self, root, folder='train2017', transform=None, crop_size=128):
         super(NoisyCoco, self).__init__()
         self.root = root
+        self.crop_size = crop_size
         self.random_crop = transforms.RandomCrop(crop_size)
         self.paths = glob.glob(os.path.join(root, folder, '*.jpg'))
         self.transform = transform
@@ -38,7 +44,12 @@ class NoisyCoco(data.Dataset):
         image = pil_loader(path)
 
         # crop
-        image = self.random_crop(image)
+        try:
+            image = self.random_crop(image)
+        except:
+            # need to do something else
+            z = np.zeros(shape=[self.crop_size,self.crop_size,3],dtype=np.uint8)
+            image = Image.fromarray(z)
 
         # add poisson noise
         noisy = poisson_noise(image)
@@ -59,15 +70,17 @@ def main():
         transforms.ToTensor()
     ])
 
-    dataloader = data.DataLoader(
-        NoisyCoco('data', transform=transform), 32, shuffle=True)
+    dataloader = data.DataLoader(NoisyCoco('data',
+                                           folder='test2017',
+                                           transform=transform,
+                                           crop_size=320),
+                                 32,
+                                 shuffle=True)
     from torchvision.utils import save_image
     from torch.autograd import Variable
 
     for i, (x, y) in enumerate(dataloader):
-        save_image(x, 'x.jpg')
-        save_image(y, 'y.jpg')
-        break
+        continue
 
 
 if __name__ == '__main__':
