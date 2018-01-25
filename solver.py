@@ -82,7 +82,7 @@ class Solver(object):
         ])
 
         dataloader = data.DataLoader(NoisyCoco('data',
-                                               transform=transform),
+                                               transform=transform,crop_size=64),
                                      batch_size=self.args.batch_size,
                                      shuffle=True,
                                      num_workers=self.args.num_workers)
