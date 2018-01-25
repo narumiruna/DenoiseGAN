@@ -10,7 +10,6 @@ from torchvision.utils import make_grid, save_image
 
 from dataset import NoisyCoco
 from model import DeepClassAwareDenoiseNet
-from utils import NoiseDataset, psnr, var_to_numpy
 
 def psnr(image_1, image_2, pixel_max=1.0):
     """
