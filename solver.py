@@ -57,7 +57,7 @@ class Solver(object):
             loss.backward()
             self.optimizer.step()
 
-            if i % args.log_interval == 0:
+            if i % self.args.log_interval == 0:
                 print('Train epoch: {}, loss: {}.'.format(epoch,
                                                           float(loss.data)))
 
