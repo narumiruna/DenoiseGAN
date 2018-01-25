@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 import torch
 from torch import nn
 from torch.autograd import Variable
@@ -7,9 +8,24 @@ from torch.utils import data
 from torchvision import transforms
 from torchvision.utils import make_grid, save_image
 
-from model import DeepClassAwareDenoiseNet
-from utils import NoiseDataset, var_to_numpy, psnr
 from dataset import NoisyCoco
+from model import DeepClassAwareDenoiseNet
+from utils import NoiseDataset, psnr, var_to_numpy
+
+def psnr(image_1, image_2, pixel_max=1.0):
+    """
+    Args:
+        image_1: A 'numpy.ndarray' representing the first image.
+        image_2: A 'numpy.ndarray' representing the second image.
+        pixel_max: A value representing the maximum possible pixel value of the image.
+    Returns:
+        A value representing PSNR.
+    """
+    mse = np.power(image_1 - image_2, 2).mean()
+    if mse == 0:
+        return 100
+
+    return 10 * np.log10(pixel_max **2 / mse)
 
 
 class Solver(object):
