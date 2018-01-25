@@ -26,7 +26,7 @@ def poisson_noise(image, peak=30):
 
 
 class NoisyCoco(data.Dataset):
-    def __init__(self, root, folder='test2017', transform=None, crop_size=128):
+    def __init__(self, root, folder='train2017', transform=None, crop_size=128):
         super(NoisyCoco, self).__init__()
         self.root = root
         self.random_crop = transforms.RandomCrop(crop_size)
