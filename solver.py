@@ -29,10 +29,10 @@ def psnr(image_1, image_2, pixel_max=1.0):
 
 
 class Solver(object):
-    def __init__(self, args):
+    def __init__(self, args, net):
         self.args = args
         self.dataloader = self.get_dataloader()
-        self.net = DeepClassAwareDenoiseNet(3, args.n_channels, args.n_layers)
+        self.net = net
 
         if args.parallel:
             print('Enable data parallel.')
@@ -46,6 +46,7 @@ class Solver(object):
                                           args.learning_rate)
 
         self.best_loss = float('Inf')
+        self.best_model = None
 
     def solve(self):
         for epoch in range(self.args.epochs):
@@ -55,7 +56,12 @@ class Solver(object):
         filename = os.path.join(self.args.model_dir,
                                 'model_{}_{}.pth'.format(epoch, index))
         print('Saving model {}'.format(filename))
-        torch.save(self.net.state_dict(), filename)
+        
+        state_dict = self.net.state_dict()
+        for key, value in state_dict.items():
+            state_dict[key] = value.cpu()
+
+        torch.save(state_dict, filename)
 
     def train(self, epoch):
         for i, (noisy, image) in enumerate(self.dataloader):
@@ -73,23 +79,34 @@ class Solver(object):
             loss.backward()
             self.optimizer.step()
 
-            if i % self.args.log_interval == 0:
-                print('Train epoch: {}, loss: {}.'.format(epoch,
-                                                          float(loss.data)))
+            cur_loss = float(loss.data)
+            if cur_loss < self.best_loss:
+                self.best_loss = cur_loss
+                self.best_model = self.net.state_dict()
 
+                if i % self.args.log_interval == 0:
+                    self.save_model(epoch, i)
+
+            if i % self.args.log_interval == 0:
+                noisy_psnr = psnr(image.data, noisy.data)
+                denoised_psnr = psnr(image.data, denoised.data)
+                print('{}: {}, {}: {:.6f}, {}: {:.6f}, {}: {:.6f}.'.format('Train epoch', epoch,
+                                                                'loss', float(loss.data),
+                                                                'noisy psnr', noisy_psnr,
+                                                                'denoised psnr', denoised_psnr))
                 print('Saving images...')
                 save_image(torch.cat([image.data, noisy.data, denoised.data]),
                            'images/{}_{}.jpg'.format(epoch, i),
                            nrow=self.args.batch_size)
-                print(psnr(image.data, noisy.data),
-                      psnr(image.data, denoised.data))
 
-                cur_loss = float(loss.data)
-                if cur_loss < self.best_loss:
-                    self.best_loss = cur_loss
-                    self.save_model(epoch, i)
+    def load_model(self, f):
+        state_dict = torch.load(f)
+        self.net.load_state_dict(state_dict)
 
     def evaluate(self):
+        pass
+
+    def predict(self, input_):
         pass
 
     def get_dataloader(self):
@@ -98,7 +115,7 @@ class Solver(object):
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ])
 
-        dataloader = data.DataLoader(NoisyCoco('data',
+        dataloader = data.DataLoader(NoisyCoco(root=self.args.train_dir,
                                                transform=transform,
                                                crop_size=self.args.crop_size),
                                      batch_size=self.args.batch_size,

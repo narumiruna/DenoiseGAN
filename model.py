@@ -30,6 +30,8 @@ class DeepClassAwareDenoiseNet(nn.Module):
             if i < len(self.module_list) - 1:
                 main = F.leaky_relu(main, negative_slope=0.2)
 
+        output = F.tanh(output)
+        
         return output
 
 

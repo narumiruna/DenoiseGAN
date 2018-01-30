@@ -14,9 +14,10 @@ def main():
     parser.add_argument('--model-dir', type=str, default='models')
     parser.add_argument('--image-dir', type=str, default='images')
     parser.add_argument('--parallel', action='store_true')
-    parser.add_argument('--num-workers', type=int, default=2)
+    parser.add_argument('--num-workers', type=int, default=0)
     parser.add_argument('--log-interval', type=int, default=1000)
     parser.add_argument('--crop-size', type=int, default=64)
+    parser.add_argument('--train-dir', type=str, default='data/test2017')
     args = parser.parse_args()
 
     args.cuda = args.cuda and torch.cuda.is_available()
@@ -25,9 +26,10 @@ def main():
 
     print(args)
 
-    solver = Solver(args)
+    net = DeepClassAwareDenoiseNet(3, args.n_channels, args.n_layers)
+    
+    solver = Solver(args, net)
     solver.solve()
-    solver.save_model()
 
 if __name__ == '__main__':
     main()
