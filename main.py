@@ -16,6 +16,7 @@ def main():
     parser.add_argument('--parallel', action='store_true')
     parser.add_argument('--num-workers', type=int, default=2)
     parser.add_argument('--log-interval', type=int, default=1000)
+    parser.add_argument('--crop-size', type=int, default=64)
     args = parser.parse_args()
 
     args.cuda = args.cuda and torch.cuda.is_available()
