@@ -44,12 +44,7 @@ class NoisyCoco(data.Dataset):
         image = pil_loader(path)
 
         # crop
-        try:
-            image = self.random_crop(image)
-        except:
-            # need to do something else
-            z = np.zeros(shape=[self.crop_size,self.crop_size,3],dtype=np.uint8)
-            image = Image.fromarray(z)
+        image = self.random_crop(image)
 
         # add poisson noise
         noisy = poisson_noise(image)
