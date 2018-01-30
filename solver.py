@@ -11,6 +11,7 @@ from torchvision.utils import make_grid, save_image
 from dataset import NoisyCoco
 from model import DeepClassAwareDenoiseNet
 
+
 def psnr(image_1, image_2, pixel_max=1.0):
     """
     Args:
@@ -93,11 +94,13 @@ class Solver(object):
 
     def get_dataloader(self):
         transform = transforms.Compose([
-            transforms.ToTensor()
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ])
 
         dataloader = data.DataLoader(NoisyCoco('data',
-                                               transform=transform,crop_size=64),
+                                               transform=transform,
+                                               crop_size=self.args.crop_size),
                                      batch_size=self.args.batch_size,
                                      shuffle=True,
                                      num_workers=self.args.num_workers)
