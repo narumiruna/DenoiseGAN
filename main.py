@@ -2,6 +2,7 @@ import argparse
 import torch
 from solver import Solver
 import os
+from model import DeepClassAwareDenoiseNet
 
 def main():
     parser = argparse.ArgumentParser()
@@ -17,7 +18,7 @@ def main():
     parser.add_argument('--num-workers', type=int, default=0)
     parser.add_argument('--log-interval', type=int, default=1000)
     parser.add_argument('--crop-size', type=int, default=64)
-    parser.add_argument('--train-dir', type=str, default='data/test2017')
+    parser.add_argument('--train-dir', type=str, default='data/train2017')
     args = parser.parse_args()
 
     args.cuda = args.cuda and torch.cuda.is_available()
