@@ -1,6 +1,5 @@
 import os
 
-import numpy as np
 import torch
 from torch import nn
 from torch.autograd import Variable
@@ -11,21 +10,19 @@ from torchvision.utils import make_grid, save_image
 from dataset import NoisyCoco
 from model import DeepClassAwareDenoiseNet
 
+from math import log10
 
-def psnr(image_1, image_2, pixel_max=1.0):
-    """
-    Args:
-        image_1: A 'numpy.ndarray' representing the first image.
-        image_2: A 'numpy.ndarray' representing the second image.
-        pixel_max: A value representing the maximum possible pixel value of the image.
-    Returns:
-        A value representing PSNR.
-    """
-    mse = np.power(image_1 - image_2, 2).mean()
+
+def psnr(x, y, pixel_max=1.0):
+    # shift
+    x = (x + 1) / 2
+    y = (y + 1) / 2
+
+    mse = (x - y).pow(2).mean()
     if mse == 0:
         return 100
 
-    return 10 * np.log10(pixel_max **2 / mse)
+    return 10 * log10(pixel_max ** 2 / float(mse))
 
 
 class Solver(object):
@@ -88,9 +85,10 @@ class Solver(object):
                 noisy_psnr = psnr(image.data, noisy.data)
                 denoised_psnr = psnr(image.data, denoised.data)
                 print('{}: {}, {}: {:.6f}, {}: {:.6f}, {}: {:.6f}.'.format('Train epoch', epoch,
-                                                                'loss', float(loss.data),
-                                                                'noisy psnr', noisy_psnr,
-                                                                'denoised psnr', denoised_psnr))
+                                                                           'loss', float(
+                                                                               loss.data),
+                                                                           'noisy psnr', noisy_psnr,
+                                                                           'denoised psnr', denoised_psnr))
                 print('Saving images...')
                 save_image(torch.cat([image.data, noisy.data, denoised.data]),
                            'images/{}_{}.jpg'.format(epoch, i),
