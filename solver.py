@@ -46,7 +46,7 @@ class Solver(object):
                                           args.learning_rate)
 
         self.best_loss = float('Inf')
-        self.best_model = None
+        self.best_state_dict = None
 
     def solve(self):
         for epoch in range(self.args.epochs):
@@ -56,8 +56,8 @@ class Solver(object):
         filename = os.path.join(self.args.model_dir,
                                 'model_{}_{}.pth'.format(epoch, index))
         print('Saving model {}'.format(filename))
-        
-        state_dict = self.net.state_dict()
+
+        state_dict = self.best_state_dict
         for key, value in state_dict.items():
             state_dict[key] = value.cpu()
 
@@ -82,10 +82,7 @@ class Solver(object):
             cur_loss = float(loss.data)
             if cur_loss < self.best_loss:
                 self.best_loss = cur_loss
-                self.best_model = self.net.state_dict()
-
-                if i % self.args.log_interval == 0:
-                    self.save_model(epoch, i)
+                self.best_state_dict = self.net.state_dict()
 
             if i % self.args.log_interval == 0:
                 noisy_psnr = psnr(image.data, noisy.data)
@@ -98,6 +95,8 @@ class Solver(object):
                 save_image(torch.cat([image.data, noisy.data, denoised.data]),
                            'images/{}_{}.jpg'.format(epoch, i),
                            nrow=self.args.batch_size)
+
+                self.save_model(epoch, i)
 
     def load_model(self, f):
         state_dict = torch.load(f)
