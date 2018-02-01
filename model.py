@@ -6,6 +6,7 @@ from torch import nn
 from torch.autograd import Variable
 from torchvision import datasets, transforms
 from torchvision.datasets.folder import pil_loader
+from utils import get_transform
 
 
 class DeepClassAwareDenoiseNet(nn.Module):
@@ -37,11 +38,7 @@ class DeepClassAwareDenoiseNet(nn.Module):
     def denoise_file(self, path, use_cuda=False):
         start = time()
 
-        transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        ])
-
+        transform = get_transform()
         image = transform(pil_loader(path))
         size = image.size()
         image = Variable(image, volatile=True).view(-1, *size)
