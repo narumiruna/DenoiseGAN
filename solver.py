@@ -1,16 +1,18 @@
 import os
+from math import log10
+from time import time
 
 import torch
+from PIL import Image
 from torch import nn
 from torch.autograd import Variable
 from torch.utils import data
 from torchvision import transforms
+from torchvision.datasets.folder import pil_loader
 from torchvision.utils import make_grid, save_image
 
 from dataset import NoisyCoco
 from model import DeepClassAwareDenoiseNet
-
-from math import log10
 
 
 def psnr(x, y, pixel_max=1.0):
@@ -91,7 +93,8 @@ class Solver(object):
                                                                            'denoised psnr', denoised_psnr))
                 print('Saving images...')
                 save_image(torch.cat([image.data, noisy.data, denoised.data]),
-                           'images/{}_{}.jpg'.format(epoch, i),
+                           os.path.join(self.args.image_dir,
+                                        '{}_{}.jpg'.format(epoch, i)),
                            nrow=self.args.batch_size)
 
                 self.save_model(epoch, i)
@@ -99,6 +102,31 @@ class Solver(object):
     def load_model(self, f):
         state_dict = torch.load(f)
         self.net.load_state_dict(state_dict)
+
+    def denoise_file(self, path, use_cuda=False):
+        """
+        denoise single image file
+        """
+        start = time()
+
+        transform = self.dataloader.dataset.transform
+        image = transform(pil_loader(path))
+        size = image.size()
+        image = Variable(image, volatile=True).view(-1, *size)
+
+        if use_cuda:
+            self.net.cuda()
+            image = image.cuda()
+        else:
+            self.net.cpu()
+
+        denosied = self.net(image).data.view(*size)
+        to_pil = transforms.ToPILImage()
+        result = to_pil((denosied + 1) / 2)
+
+        end = time()
+        print('Denoised {}, time: {}s.'.format(path, end - start))
+        return result
 
     def evaluate(self):
         pass
