@@ -10,7 +10,6 @@ Accept-Encoding:gzip, deflate
 Accept-Language:zh-TW,zh;q=0.9,ja;q=0.8,en-US;q=0.7,en;q=0.6
 Cache-Control:max-age=0
 Connection:keep-alive
-Cookie:__cfduid=d00174e86a16ba191d07dea89c7163ff61517387425
 DNT:1
 Host:www.insecam.org
 Referer:http://www.insecam.org/en/byrating/
@@ -41,7 +40,7 @@ class Insecam:
         self.sess.close()
 
 if __name__ == '__main__':
-    url = 'http://www.insecam.org/en/view/506886/'
+    url = 'http://www.insecam.org/en/view/452973/'
     cam = Insecam(url)
     cam.get_frame().show()
     cam.close()

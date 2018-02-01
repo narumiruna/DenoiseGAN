@@ -17,9 +17,10 @@ from utils import psnr
 
 
 class Solver(object):
-    def __init__(self, args, net, dataloader):
+    def __init__(self, args, net, train_dataloader, val_dataloader):
         self.args = args
-        self.dataloader = dataloader
+        self.train_dataloader = train_dataloader
+        self.val_dataloader = val_dataloader
         self.net = net
 
         if args.parallel:
@@ -52,7 +53,7 @@ class Solver(object):
         torch.save(state_dict, filename)
 
     def train(self, epoch):
-        for i, (noisy, image) in enumerate(self.dataloader):
+        for i, (noisy, image) in enumerate(self.train_dataloader):
             noisy = Variable(noisy)
             image = Variable(image)
 
@@ -67,16 +68,23 @@ class Solver(object):
             loss.backward()
             self.optimizer.step()
 
+
+
             cur_loss = float(loss.data)
-            if cur_loss < self.best_loss:
-                self.best_loss = cur_loss
-                self.best_state_dict = self.net.state_dict()
+            # if cur_loss < self.best_loss:
+            #     self.best_loss = cur_loss
+            #     self.best_state_dict = self.net.state_dict()
 
             if i % self.args.log_interval == 0:
+                avg_val_loss = self.evaluate()
+                if avg_val_loss < self.best_loss:
+                    self.best_loss = avg_val_loss
+                    self.best_state_dict = self.net.state_dict()
+
                 noisy_psnr = psnr(image.data, noisy.data)
                 denoised_psnr = psnr(image.data, denoised.data)
                 print('{}: {}, {}: {:.6f}, {}: {:.6f}, {}: {:.6f}.'.format('Train epoch', epoch,
-                                                                           'loss', cur_loss,
+                                                                           'avg_val_loss', avg_val_loss,
                                                                            'noisy psnr', noisy_psnr,
                                                                            'denoised psnr', denoised_psnr))
                 # save current training results
@@ -88,9 +96,20 @@ class Solver(object):
                 # save best model
                 self.save_model(epoch, i)
 
-    def load_model(self, f):
-        state_dict = torch.load(f)
-        self.net.load_state_dict(state_dict)
-
     def evaluate(self):
-        pass
+        losses = []
+        for i, (noisy, image) in enumerate(self.val_dataloader):
+            noisy = Variable(noisy)
+            image = Variable(image)
+
+            if self.args.cuda:
+                noisy = noisy.cuda()
+                image = image.cuda()
+
+            denoised = self.net(noisy)
+            loss = (denoised - image).pow(2).mean()
+
+            losses.append(float(loss.data))
+        avg_loss = torch.cat(losses).mean()
+        print('avg loss: {}'.format(avg_loss))
+        return avg_loss

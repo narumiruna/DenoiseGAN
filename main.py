@@ -21,7 +21,6 @@ def main():
     parser.add_argument('--num-workers', type=int, default=0)
     parser.add_argument('--log-interval', type=int, default=1000)
     parser.add_argument('--crop-size', type=int, default=64)
-    parser.add_argument('--train-dir', type=str, default='data/train2017')
     args = parser.parse_args()
 
     args.cuda = args.cuda and torch.cuda.is_available()
@@ -32,14 +31,21 @@ def main():
 
     net = DeepClassAwareDenoiseNet(3, args.n_channels, args.n_layers)
 
-    dataloader = data.DataLoader(NoisyCoco(root=args.train_dir,
+    train_dataloader = data.DataLoader(NoisyCoco(root='data/train2017',
                                             transform=get_transform(),
                                             crop_size=args.crop_size),
                                     batch_size=args.batch_size,
                                     shuffle=True,
                                     num_workers=args.num_workers)
 
-    solver = Solver(args, net, dataloader)
+    val_dataloader = data.DataLoader(NoisyCoco(root='data/val2017',
+                                            transform=get_transform(),
+                                            crop_size=args.crop_size),
+                                    batch_size=args.batch_size,
+                                    shuffle=True,
+                                    num_workers=args.num_workers)
+
+    solver = Solver(args, net, train_dataloader, val_dataloader)
     solver.solve()
 
 if __name__ == '__main__':
