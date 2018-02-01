@@ -5,6 +5,8 @@ import os
 from model import DeepClassAwareDenoiseNet
 from torch.utils import data
 from utils import get_transform
+from dataset import NoisyCoco
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch-size', '-bs', type=int, default=64)
