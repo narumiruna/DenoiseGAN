@@ -109,7 +109,7 @@ class Solver(object):
             denoised = self.net(noisy)
             loss = (denoised - image).pow(2).mean()
 
-            losses.append(float(loss.data))
+            losses.append(loss.data)
         avg_loss = torch.cat(losses).mean()
         print('avg loss: {}'.format(avg_loss))
         return avg_loss
