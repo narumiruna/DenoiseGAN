@@ -1,10 +1,11 @@
+from time import time
+
 import torch
 import torch.nn.functional as F
 from torch import nn
 from torch.autograd import Variable
 from torchvision import datasets, transforms
 from torchvision.datasets.folder import pil_loader
-from time import time
 
 
 class DeepClassAwareDenoiseNet(nn.Module):
@@ -34,9 +35,6 @@ class DeepClassAwareDenoiseNet(nn.Module):
         return output
 
     def denoise_file(self, path, use_cuda=False):
-        """
-        denoise single image file
-        """
         start = time()
 
         transform = transforms.Compose([
