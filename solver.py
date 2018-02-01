@@ -96,7 +96,7 @@ class Solver(object):
                 # save best model
                 self.save_model(epoch, i)
 
-    def evaluate(self):
+    def evaluate(self, max_batch=10):
         losses = []
         for i, (noisy, image) in enumerate(self.val_dataloader):
             noisy = Variable(noisy)
@@ -110,6 +110,10 @@ class Solver(object):
             loss = (denoised - image).pow(2).mean()
 
             losses.append(loss.data)
+
+            if not i < max_batch:
+                break
+
         avg_loss = torch.cat(losses).mean()
         print('avg loss: {}'.format(avg_loss))
         return avg_loss
