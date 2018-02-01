@@ -54,6 +54,8 @@ class Solver(object):
 
     def train(self, epoch):
         for i, (noisy, image) in enumerate(self.train_dataloader):
+            self.net.train()
+
             noisy = Variable(noisy)
             image = Variable(image)
 
@@ -97,10 +99,12 @@ class Solver(object):
                 self.save_model(epoch, i)
 
     def evaluate(self, max_batch=10):
+        self.net.eval()
+
         losses = []
         for i, (noisy, image) in enumerate(self.val_dataloader):
-            noisy = Variable(noisy)
-            image = Variable(image)
+            noisy = Variable(noisy, volatile=True)
+            image = Variable(image, volatile=True)
 
             if self.args.cuda:
                 noisy = noisy.cuda()
