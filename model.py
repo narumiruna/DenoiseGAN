@@ -3,9 +3,7 @@ import torch.nn.functional as F
 from torch import nn
 from torch.autograd import Variable
 from torchvision import datasets, transforms
-
-
-from torch import nn
+from torchvision.datasets.folder import pil_loader
 
 
 class DeepClassAwareDenoiseNet(nn.Module):
@@ -31,8 +29,36 @@ class DeepClassAwareDenoiseNet(nn.Module):
                 main = F.leaky_relu(main, negative_slope=0.2)
 
         output = F.tanh(output)
-        
+
         return output
+
+    def denoise_file(self, path, use_cuda=False):
+        """
+        denoise single image file
+        """
+        start = time()
+
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ])
+
+        image = transform(pil_loader(path))
+        size = image.size()
+        image = Variable(image, volatile=True).view(-1, *size)
+
+        if use_cuda:
+            self.cuda()
+            image = image.cuda()
+        else:
+            self.cpu()
+
+        denosied = self.forward(image).data.view(*size)
+        to_pil = transforms.ToPILImage()
+        result = to_pil((denosied + 1) / 2)
+
+        print('Denoised {}, time: {}s.'.format(path, time() - start))
+        return result
 
 
 class Discriminator(nn.Module):
