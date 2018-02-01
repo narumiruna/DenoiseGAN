@@ -3,7 +3,8 @@ import torch
 from solver import Solver
 import os
 from model import DeepClassAwareDenoiseNet
-
+from torch.utils import data
+from utils import get_transform
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch-size', '-bs', type=int, default=64)
@@ -28,8 +29,15 @@ def main():
     print(args)
 
     net = DeepClassAwareDenoiseNet(3, args.n_channels, args.n_layers)
-    
-    solver = Solver(args, net)
+
+    dataloader = data.DataLoader(NoisyCoco(root=args.train_dir,
+                                            transform=get_transform(),
+                                            crop_size=args.crop_size),
+                                    batch_size=args.batch_size,
+                                    shuffle=True,
+                                    num_workers=args.num_workers)
+
+    solver = Solver(args, net, dataloader)
     solver.solve()
 
 if __name__ == '__main__':

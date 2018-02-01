@@ -7,30 +7,19 @@ from PIL import Image
 from torch import nn
 from torch.autograd import Variable
 from torch.utils import data
-from torchvision import transforms
-from torchvision.datasets.folder import pil_loader
-from torchvision.utils import make_grid, save_image
+from torchvision.utils import save_image
 
 from dataset import NoisyCoco
 from model import DeepClassAwareDenoiseNet
 
 
-def psnr(x, y, pixel_max=1.0):
-    # shift
-    x = (x + 1) / 2
-    y = (y + 1) / 2
-
-    mse = (x - y).pow(2).mean()
-    if mse == 0:
-        return 100
-
-    return 10 * log10(pixel_max ** 2 / float(mse))
+from utils import psnr
 
 
 class Solver(object):
-    def __init__(self, args, net):
+    def __init__(self, args, net, dataloader):
         self.args = args
-        self.dataloader = self.get_dataloader()
+        self.dataloader = dataloader
         self.net = net
 
         if args.parallel:
@@ -87,40 +76,21 @@ class Solver(object):
                 noisy_psnr = psnr(image.data, noisy.data)
                 denoised_psnr = psnr(image.data, denoised.data)
                 print('{}: {}, {}: {:.6f}, {}: {:.6f}, {}: {:.6f}.'.format('Train epoch', epoch,
-                                                                           'loss', float(
-                                                                               loss.data),
+                                                                           'loss', cur_loss,
                                                                            'noisy psnr', noisy_psnr,
                                                                            'denoised psnr', denoised_psnr))
-                print('Saving images...')
-                save_image(torch.cat([image.data, noisy.data, denoised.data]),
-                           os.path.join(self.args.image_dir,
-                                        '{}_{}.jpg'.format(epoch, i)),
-                           nrow=self.args.batch_size)
+                # save current training results
+                path = os.path.join(self.args.image_dir, '{}_{}.jpg'.format(epoch, i))
+                print('Saving image {}'.format(path))
+                cat_tensor = torch.cat([image.data, noisy.data, denoised.data])
+                save_image(cat_tensor, path, nrow=self.args.batch_size)
 
+                # save best model
                 self.save_model(epoch, i)
 
     def load_model(self, f):
         state_dict = torch.load(f)
         self.net.load_state_dict(state_dict)
 
-
     def evaluate(self):
         pass
-
-    def predict(self, input_):
-        pass
-
-    def get_dataloader(self):
-        transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        ])
-
-        dataloader = data.DataLoader(NoisyCoco(root=self.args.train_dir,
-                                               transform=transform,
-                                               crop_size=self.args.crop_size),
-                                     batch_size=self.args.batch_size,
-                                     shuffle=True,
-                                     num_workers=self.args.num_workers)
-
-        return dataloader
