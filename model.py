@@ -4,6 +4,7 @@ from torch import nn
 from torch.autograd import Variable
 from torchvision import datasets, transforms
 from torchvision.datasets.folder import pil_loader
+from time import time
 
 
 class DeepClassAwareDenoiseNet(nn.Module):
