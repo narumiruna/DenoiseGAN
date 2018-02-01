@@ -1,1 +1,1 @@
-# DenoiseGAN
+# Denoise Net
