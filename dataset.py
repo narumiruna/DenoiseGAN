@@ -11,6 +11,8 @@ from torchvision.datasets.folder import pil_loader
 
 from random import randint
 
+from utils import psnr, get_transform
+
 
 class RENOIR(data.Dataset):
     def __init__(self, root, crop_size=64, transform=None):
@@ -27,6 +29,8 @@ class RENOIR(data.Dataset):
         noisy = pil_loader(noisy_path)
         ref = pil_loader(ref_path)
 
+        print(noisy_path, ref_path)
+
         # crop
         w, h = noisy.size
         size = self.crop_size
@@ -35,7 +39,7 @@ class RENOIR(data.Dataset):
         box = (left,  upper, left + size, upper + size)
 
         crop_noisy = noisy.crop(box)
-        crop_ref = noisy.crop(box)
+        crop_ref = ref.crop(box)
 
         if self.transform:
             crop_noisy = self.transform(crop_noisy)
@@ -48,13 +52,11 @@ class RENOIR(data.Dataset):
 
 
 def test_renoir():
-    transform = transforms.Compose([
-        transforms.ToTensor()
-    ])
+    transform = get_transform()
     dst = RENOIR('data/renoir', transform=transform)
     loader = data.DataLoader(dst, batch_size=50, shuffle=False)
     for i, (x, y) in enumerate(loader):
-        print(x.size())
+        print(psnr(x,y))
 
 
 if __name__ == '__main__':
