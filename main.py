@@ -5,7 +5,7 @@ import os
 from model import DeepClassAwareDenoiseNet
 from torch.utils import data
 from utils import get_transform
-from dataset import NoisyCoco
+from dataset import NoisyCoco, RENOIR
 
 def main():
     parser = argparse.ArgumentParser()
@@ -31,7 +31,7 @@ def main():
 
     net = DeepClassAwareDenoiseNet(3, args.n_channels, args.n_layers)
 
-    train_dataloader = data.DataLoader(NoisyCoco(root='data/renoir',
+    train_dataloader = data.DataLoader(RENOIR(root='data/renoir',
                                             transform=get_transform(),
                                             crop_size=args.crop_size),
                                     batch_size=args.batch_size,
@@ -52,7 +52,7 @@ def main():
     #                                 shuffle=True,
     #                                 num_workers=args.num_workers)
 
-    solver = Solver(args, net, train_dataloader, val_dataloader)
+    solver = Solver(args, net, train_dataloader)
     solver.solve()
 
 if __name__ == '__main__':
