@@ -7,13 +7,58 @@ from numpy.random import poisson
 from PIL import Image
 from torch.utils import data
 from torchvision import datasets, transforms
+from torchvision.datasets.folder import pil_loader
+
+from random import randint
 
 
-def pil_loader(path):
-    # open path as file to avoid ResourceWarning (https://github.com/python-pillow/Pillow/issues/835)
-    with open(path, 'rb') as f:
-        with Image.open(f) as image:
-            return image.convert('RGB')
+class RENOIR(data.Dataset):
+    def __init__(self, root, crop_size=64, transform=None):
+        self.root = root
+        self.crop_size = crop_size
+        self.transform = transform
+        self.paths = sorted(glob.glob(os.path.join(self.root, '*/*/*Noisy.bmp')))
+
+    def __getitem__(self, index):
+        noisy_path = self.paths[index]
+        ref_path = glob.glob(os.path.join(*(noisy_path.split('/')[:-1]), '*Reference.bmp'))[0]
+
+        # 一張 3000x3000 這樣做效率很差, 不過先這樣以後再說
+        noisy = pil_loader(noisy_path)
+        ref = pil_loader(ref_path)
+
+        # crop
+        w, h = noisy.size
+        size = self.crop_size
+
+        left, upper = randint(0, w - size), randint(0, h - size)
+        box = (left,  upper, left + size, upper + size)
+
+        crop_noisy = noisy.crop(box)
+        crop_ref = noisy.crop(box)
+
+        if self.transform:
+            crop_noisy = self.transform(crop_noisy)
+            crop_ref = self.transform(crop_ref)
+
+        return crop_noisy, crop_ref
+
+    def __len__(self):
+        return len(self.paths)
+
+
+def main():
+    transform = transforms.Compose([
+        transforms.ToTensor()
+    ])
+    dst = RENOIR('data/renoir', transform=transform)
+    loader = data.DataLoader(dst, batch_size=50, shuffle=False)
+    for i, (x, y) in enumerate(loader):
+        print(x.size())
+
+
+if __name__ == '__main__':
+    main()
 
 
 def poisson_noise(image, peak=30):
