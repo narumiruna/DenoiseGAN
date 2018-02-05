@@ -29,8 +29,6 @@ class RENOIR(data.Dataset):
         noisy = pil_loader(noisy_path)
         ref = pil_loader(ref_path)
 
-        print(noisy_path, ref_path)
-
         # crop
         w, h = noisy.size
         size = self.crop_size
