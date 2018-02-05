@@ -47,7 +47,7 @@ class RENOIR(data.Dataset):
         return len(self.paths)
 
 
-def main():
+def test_renoir():
     transform = transforms.Compose([
         transforms.ToTensor()
     ])
@@ -58,7 +58,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    test_renoir()
 
 
 def poisson_noise(image, peak=30):

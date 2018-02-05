@@ -17,7 +17,7 @@ from utils import psnr
 
 
 class Solver(object):
-    def __init__(self, args, net, train_dataloader, val_dataloader):
+    def __init__(self, args, net, train_dataloader, val_dataloader=None):
         self.args = args
         self.train_dataloader = train_dataloader
         self.val_dataloader = val_dataloader
@@ -70,23 +70,21 @@ class Solver(object):
             loss.backward()
             self.optimizer.step()
 
-
-
             cur_loss = float(loss.data)
-            # if cur_loss < self.best_loss:
-            #     self.best_loss = cur_loss
-            #     self.best_state_dict = self.net.state_dict()
+            if cur_loss < self.best_loss:
+                self.best_loss = cur_loss
+                self.best_state_dict = self.net.state_dict()
 
             if i % self.args.log_interval == 0:
-                avg_val_loss = self.evaluate()
-                if avg_val_loss < self.best_loss:
-                    self.best_loss = avg_val_loss
-                    self.best_state_dict = self.net.state_dict()
+                # avg_val_loss = self.evaluate()
+                # if avg_val_loss < self.best_loss:
+                #     self.best_loss = avg_val_loss
+                #     self.best_state_dict = self.net.state_dict()
 
                 noisy_psnr = psnr(image.data, noisy.data)
                 denoised_psnr = psnr(image.data, denoised.data)
                 print('{}: {}, {}: {:.6f}, {}: {:.6f}, {}: {:.6f}.'.format('Train epoch', epoch,
-                                                                           'avg_val_loss', avg_val_loss,
+                                                                           'loss', cur_loss,
                                                                            'noisy psnr', noisy_psnr,
                                                                            'denoised psnr', denoised_psnr))
                 # save current training results

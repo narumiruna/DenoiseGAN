@@ -31,19 +31,26 @@ def main():
 
     net = DeepClassAwareDenoiseNet(3, args.n_channels, args.n_layers)
 
-    train_dataloader = data.DataLoader(NoisyCoco(root='data/train2017',
+    train_dataloader = data.DataLoader(NoisyCoco(root='data/renoir',
                                             transform=get_transform(),
                                             crop_size=args.crop_size),
                                     batch_size=args.batch_size,
                                     shuffle=True,
                                     num_workers=args.num_workers)
 
-    val_dataloader = data.DataLoader(NoisyCoco(root='data/val2017',
-                                            transform=get_transform(),
-                                            crop_size=args.crop_size),
-                                    batch_size=args.batch_size,
-                                    shuffle=True,
-                                    num_workers=args.num_workers)
+    # train_dataloader = data.DataLoader(NoisyCoco(root='data/coco/train2017',
+    #                                         transform=get_transform(),
+    #                                         crop_size=args.crop_size),
+    #                                 batch_size=args.batch_size,
+    #                                 shuffle=True,
+    #                                 num_workers=args.num_workers)
+
+    # val_dataloader = data.DataLoader(NoisyCoco(root='data/coco/val2017',
+    #                                         transform=get_transform(),
+    #                                         crop_size=args.crop_size),
+    #                                 batch_size=args.batch_size,
+    #                                 shuffle=True,
+    #                                 num_workers=args.num_workers)
 
     solver = Solver(args, net, train_dataloader, val_dataloader)
     solver.solve()
