@@ -29,13 +29,6 @@ def main():
 
     net = DeepClassAwareDenoiseNet(3, args.channels, args.layers)
 
-    # dataloader = data.DataLoader(RENOIR(root='data/renoir',
-    #                                         transform=get_transform(),
-    #                                         crop_size=args.crop_size),
-    #                                 batch_size=args.batch_size,
-    #                                 shuffle=True,
-    #                                 num_workers=args.workers)
-
     dataloader = data.DataLoader(NoisyCoco(root='data/train2017',
                                             transform=get_transform(),
                                             crop_size=args.crop_size),

@@ -92,6 +92,13 @@ def main():
     # z = d(n(x))
     # print(z)
 
+    test = nn.Sequential(
+        nn.Conv2d(3, 32, 3, 2, 1),
+        nn.LeakyReLU(),
+        nn.Conv2d(32, 64, 3, 2, 1),
+        nn.LeakyReLU()
+    )
+    print(test)
 
 if __name__ == '__main__':
     main()
