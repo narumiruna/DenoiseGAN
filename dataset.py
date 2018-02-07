@@ -49,21 +49,14 @@ class RENOIR(data.Dataset):
         return len(self.paths)
 
 
-def test_renoir():
-    transform = get_transform()
-    dst = RENOIR('data/renoir', transform=transform)
-    loader = data.DataLoader(dst, batch_size=50, shuffle=False)
-    for i, (x, y) in enumerate(loader):
-        print(psnr(x,y))
-
 def poisson_noise(image, peak=1.0):
     image = np.array(image)
     ratio = peak / 255.0
     output = poisson(image * ratio) / ratio
 
     # convex combination
-    # t = np.random.rand()
-    # output = t * image + (1 - t) * output
+    t = np.random.rand()
+    output = t * image + (1 - t) * output
 
     output = np.clip(output, 0, 255).astype(np.uint8)
     output = Image.fromarray(output)

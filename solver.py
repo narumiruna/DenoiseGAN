@@ -55,14 +55,10 @@ class Solver(object):
         for i, (noisy, image) in enumerate(self.dataloader):
             noisy = Variable(noisy)
             image = Variable(image)
-            t = Variable(torch.rand(1))
 
             if self.args.cuda:
                 noisy = noisy.cuda()
                 image = image.cuda()
-                t = t.cuda()
-
-            noisy = t * image + (1 - t) * noisy
 
             denoised = self.net(noisy)
             loss = (denoised - image).pow(2).mean()
