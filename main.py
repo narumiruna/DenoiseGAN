@@ -36,7 +36,7 @@ def main():
     #                                 shuffle=True,
     #                                 num_workers=args.workers)
 
-    dataloader = data.DataLoader(NoisyCoco(root='data/coco/train2017',
+    dataloader = data.DataLoader(NoisyCoco(root='data/train2017',
                                             transform=get_transform(),
                                             crop_size=args.crop_size),
                                     batch_size=args.batch_size,

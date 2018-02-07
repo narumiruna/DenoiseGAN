@@ -35,11 +35,11 @@ class DeepClassAwareDenoiseNet(nn.Module):
 
         return output
 
-    def denoise_file(self, path, use_cuda=False):
+    def denoise_image(self, pil_image, use_cuda=False):
         start = time()
 
         transform = get_transform()
-        image = transform(pil_loader(path))
+        image = transform(pil_image)
         size = image.size()
         image = Variable(image, volatile=True).view(-1, *size)
 
@@ -55,6 +55,12 @@ class DeepClassAwareDenoiseNet(nn.Module):
 
         print('Denoised {}, time: {}s.'.format(path, time() - start))
         return result
+
+    def denoise_file(self, path, use_cuda=False):
+        pil_image = pil_loader(path)
+        result = self.denoise_image(pil_image, use_cuda=False)
+        return result
+
 
 
 class Discriminator(nn.Module):
