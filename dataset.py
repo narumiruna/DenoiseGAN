@@ -74,7 +74,6 @@ def poisson_noise(image, peak=30):
     output = Image.fromarray(output)
     return output
 
-
 class NoisyCoco(data.Dataset):
     def __init__(self, root, transform=None, crop_size=128):
         super(NoisyCoco, self).__init__()
